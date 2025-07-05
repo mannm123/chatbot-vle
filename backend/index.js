@@ -5,29 +5,79 @@ const path = require('path');
 const auth = require('basic-auth');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const https = require('https');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+// const options = {
+//   key: fs.readFileSync('/home/mannminh/ssl/hcmue_edu_vn.key'),
+//   cert: fs.readFileSync('/home/mannminh/ssl/star_hcmue_edu_vn_cert.pem')
+// };
 
-const db = mysql.createConnection({
+const pool = mysql.createPool({
   host: 'localhost',
   user: 'chatbot_vle',
   password: 'chatbot_vle',
-  database: 'chatbot_vle'
+  database: 'chatbot_vle',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
+
+// Tạo promise để dùng async/await
+const db = pool;
+
+// Kiểm tra kết nối một lần ban đầu
+db.query('SELECT 1', (err) => {
+  if (err) {
+    console.error('❌ Không thể kết nối MySQL:', err.message);
+    process.exit(1);
+  } else {
+    console.log('✅ Đã kết nối tới MySQL');
+  }
+});
+
 function basicAuth(req, res, next) {
   const credentials = auth(req);
   const USERNAME = 'admin';
-  const PASSWORD = 'vle123';
+  const PASSWORD = 'Vle@123';
   if (!credentials || credentials.name !== USERNAME || credentials.pass !== PASSWORD) {
     res.set('WWW-Authenticate', 'Basic realm="VLE Admin"');
     return res.status(401).send('Access denied');
   }
   next();
 }
+function handleDisconnect() {
+  const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'chatbot_vle',
+    password: 'chatbot_vle',
+    database: 'chatbot_vle'
+  });
+
+  db.connect((err) => {
+    if (err) {
+      console.error('❌ Reconnect thất bại, thử lại sau 2s...', err.message);
+      setTimeout(handleDisconnect, 2000); // retry sau 2 giây
+    } else {
+      console.log('✅ Reconnected to MySQL');
+    }
+  });
+
+  db.on('error', function(err) {
+    console.error('💥 MySQL error:', err);
+    if (err.fatal) {
+      handleDisconnect();
+    }
+  });
+
+  global.db = db; // nếu bạn cần chia sẻ lại kết nối
+}
+
 // Bảo vệ addForm.html bằng Basic Auth
-app.get('/dasboard', basicAuth,(req, res) => {
+app.get('/dashboard', basicAuth,(req, res) => {
   res.sendFile(path.join(__dirname, '..','frontend','dashboard.html'));
 });
 app.get('/admin', basicAuth,(req, res) => {
@@ -36,9 +86,12 @@ app.get('/admin', basicAuth,(req, res) => {
 app.get('/addcate', basicAuth,(req, res) => {
   res.sendFile(path.join(__dirname, '..','frontend','addCat.html'));
 });
-app.get('/',  (req, res) => {
-  res.sendFile(path.join(__dirname, '..','frontend','SearchForm.html'));
+app.get('/perchat', basicAuth,(req, res) => {
+  res.sendFile(path.join(__dirname, '..','frontend','perchat.html'));
 });
+// app.get('/',  (req, res) => {
+//   res.sendFile(path.join(__dirname, '..','frontend','SearchForm.html'));
+// });
 app.use(express.static(path.join(__dirname,'..', 'frontend')));
 //Lấy danh mục
 app.get('/api/filters', (req, res) => {
@@ -156,10 +209,10 @@ app.post('/api/add', (req, res) => {
 
 // Lấy danh sách câu hỏi
 app.get('/api/questions', (req, res) => {
-  const sql = `
+  const sql =` 
     SELECT d.id, d.cauhoi, d.cautraloi, dm.ten as danhmuc
     FROM data d
-    JOIN danhmuc dm ON d.danhmuc = dm.id`;
+    JOIN danhmuc dm ON d.danhmuc = dm.id;`
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ message: 'Lỗi truy vấn' });
     res.json(results);
@@ -196,8 +249,8 @@ app.get("/api/getchatuser", (req, res) => {
     FROM chat_history AS ch
     LEFT JOIN danhmuc AS dm ON dm.id = ch.danhmuc where ch.role='user'
     GROUP BY category
-    ORDER BY count DESC;
-  `;
+    ORDER BY count DESC;`
+  ;
   db.query(sql, (err, results) => {
     if (err) {
       console.error(err);
@@ -209,7 +262,7 @@ app.get("/api/getchatuser", (req, res) => {
   });
 });
 app.get("/api/getchatassistant", (req, res) => {
-  const sql = `
+  const sql =` 
     SELECT 
       CASE 
         WHEN ch.danhmuc = 0 THEN 'chatgpt' 
@@ -219,8 +272,8 @@ app.get("/api/getchatassistant", (req, res) => {
     FROM chat_history AS ch
     LEFT JOIN danhmuc AS dm ON dm.id = ch.danhmuc where ch.role='assistant'
     GROUP BY category
-    ORDER BY count DESC;
-  `;
+    ORDER BY count DESC;`
+  ;
   db.query(sql, (err, results) => {
     if (err) {
       console.error(err);
@@ -270,8 +323,8 @@ app.post("/api/add_question_from_group", (req, res) => {
   );
 });
 app.get("/api/chat_count_by_hour", (req, res) => {
-  db.query(
-    `SELECT HOUR(created_at) AS hour, COUNT(*) AS count
+  db.query(`
+    SELECT HOUR(created_at) AS hour, COUNT(*) AS count
      FROM chat_history
      WHERE role = 'user'
      GROUP BY HOUR(created_at)
@@ -285,12 +338,12 @@ app.get("/api/chat_count_by_hour", (req, res) => {
   );
 });
 app.get("/api/chat_summary", (req, res) => {
-  const sql = `
+  const sql =` 
     SELECT
       (SELECT COUNT(DISTINCT session_id) FROM chat_history) AS total_sessions,
       (SELECT COUNT(*) FROM chat_history WHERE role = 'user') AS total_questions,
       (SELECT COUNT(*) FROM chat_history WHERE role = 'user' AND danhmuc != 0) AS recognized_questions
-  `;
+  ;`
 
   db.query(sql, (err, results) => {
     if (err) {
@@ -310,7 +363,33 @@ app.get("/api/chat_summary", (req, res) => {
     });
   });
 });
+app.get("/api/perchat", (req, res) => {
+  const sql = `
+    SELECT 
+      dm.ten AS danhmuc,
+      SUM(CASE WHEN ch.role = 'user' THEN 1 ELSE 0 END) AS user_count,
+      SUM(CASE WHEN ch.role = 'assistant' THEN 1 ELSE 0 END) AS assistant_count
+    FROM chat_history AS ch
+    JOIN danhmuc AS dm ON ch.danhmuc = dm.id
+    WHERE ch.danhmuc <> 0
+    GROUP BY dm.ten
+    ORDER BY dm.ten;
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Query error:', err);
+      return res.status(500).send({ error: 'Database query error' });
+    }
+
+    res.json({
+      status: 'success',
+      data: results
+    });
+  });
+});
+
 
 app.listen(3000, () => {
-  console.log('Server running at http://10.0.0.84:3000');
+  console.log('✅ HTTP Server is running on 0.0.0.0:3000');
 });

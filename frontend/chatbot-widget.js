@@ -1,6 +1,6 @@
 (function () {
-  const API_URL = "http://10.0.0.84:8000/chat";
-  const HISTORY_URL = "http://10.0.0.84:8000/history";
+  const API_URL = "https://chatbot.hcmue.edu.vn/vle/chat";
+  const HISTORY_URL = "https://chatbot.hcmue.edu.vn/vle/history";
 
   let sessionId = localStorage.getItem("chat_session_id");
   if (!sessionId) {
@@ -31,7 +31,7 @@
   const widget = document.createElement("div");
   widget.id = "chatbot-widget";
   widget.innerHTML = `
-    <div id="chatbot-widget-header">🤖 AI Chatbot</div>
+    <div id="chatbot-widget-header">🤖 Trợ lý ảo VLE</div>
     <div id="chatbot-widget-messages"></div>
     <div id="chatbot-widget-input">
       <input type="text" placeholder="Nhập câu hỏi..." />

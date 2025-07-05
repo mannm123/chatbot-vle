@@ -6,10 +6,12 @@ let allData = [];
 let currentPage = 1;
 let rowsPerPage = 5;
 // ===========================
-// ⚡️ LOAD DATA
+// ⚡️ 
+// 
+//  DATA
 // ===========================
 function loadQuestions() {
-  fetch('http://10.0.0.84:3000/api/questions')
+  fetch('https://chatbotadmin.hcmue.edu.vn/vle/api/questions')
     .then(res => res.json())
     .then(data => {
       allData = data;
@@ -19,7 +21,7 @@ function loadQuestions() {
 }
 
 function loadDanhMuc() {
-  fetch('http://10.0.0.84:3000/api/filters')
+  fetch('https://chatbotadmin.hcmue.edu.vn/vle/api/filters')
     .then(res => res.json())
     .then(data => {
       const select = document.getElementById('danhmuc');
@@ -66,7 +68,13 @@ function renderTable() {
   });
   renderPagination(filteredData.length);
 }
-
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 function renderTableOnlyView() {
   const tbody = document.querySelector('#questionTable tbody');
   if (!tbody) return;
@@ -128,7 +136,7 @@ function renderPagination(totalRows) {
 function deleteQuestion(id) {
   if (!confirm('Bạn có chắc chắn muốn xoá câu hỏi này?')) return;
 
-  fetch(`http://10.0.0.84:3000/api/questions/${id}`, { method: 'DELETE' })
+  fetch(`https://chatbotadmin.hcmue.edu.vn/vle/api/questions/${id}`, { method: 'DELETE' })
     .then(res => res.json())
     .then(data => {
       if (data.success) loadQuestions();
@@ -147,7 +155,7 @@ function toggleEditRow(button) {
     const newCauhoi = cauhoiCell.textContent.trim();
     const newTraloi = traloiCell.textContent.trim();
 
-    fetch(`http://10.0.0.84:3000/api/questions/${id}`, {
+    fetch(`https://chatbotadmin.hcmue.edu.vn/vle/api/questions/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cauhoi: newCauhoi, traloi: newTraloi })
@@ -174,7 +182,7 @@ function toggleEditRow(button) {
 // ⚡️ DANH MỤC
 // ===========================
 function loadDanhMucList() {
-  fetch('http://10.0.0.84:3000/api/loaddanhmuc')
+  fetch('https://chatbotadmin.hcmue.edu.vn/vle/api/loaddanhmuc')
   .then(res => res.json())
   .then(data => {
     // ✅ data LÀ MẢNG
@@ -218,7 +226,7 @@ function loadDanhMucList() {
 function deleteDanhMuc(id) {
   if (!confirm('Bạn có chắc chắn muốn xoá danh mục này?')) return;
 
-  fetch(`http://10.0.0.84:3000/api/danhmuc/${id}`, {
+  fetch(`https://chatbotadmin.hcmue.edu.vn/vle/api/danhmuc/${id}`, {
     method: 'DELETE'
   })
     .then(res => res.json())
@@ -241,7 +249,7 @@ function editDanhMuc(button) {
     const id = tenCell.getAttribute('data-id');
     const ten = tenCell.textContent.trim();
 
-    fetch(`http://10.0.0.84:3000/api/danhmuc/${id}`, {
+    fetch(`https://chatbotadmin.hcmue.edu.vn/vle/api/danhmuc/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ten })
@@ -283,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       //console.log(danhmuc);
-      fetch('http://10.0.0.84:3000/api/add', {
+      fetch('https://chatbotadmin.hcmue.edu.vn/vle/api/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ danhmuc, cauhoi, traloi })
@@ -356,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      fetch('http://10.0.0.84:3000/api/danhmuc', {
+      fetch('https://chatbotadmin.hcmue.edu.vn/vle/api/danhmuc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ten })

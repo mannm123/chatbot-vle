@@ -14,7 +14,7 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 
 embedding_model = SentenceTransformer('all-mpnet-base-v2')
-
+app = FastAPI()
 # Load .env
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -47,7 +47,7 @@ class ChatPayload(BaseModel):
     messages: List[dict]
 
 # Caching QA
-@lru_cache(maxsize=1)
+
 def get_cached_qa_pairs():
     try:
         conn = mysql.connector.connect(**MYSQL_CONFIG)
@@ -60,7 +60,6 @@ def get_cached_qa_pairs():
         logger.error(f"❌ DB load error: {e}")
         return []
 
-@lru_cache(maxsize=1)
 def get_vectorizer_and_matrix():
     qa_pairs = get_cached_qa_pairs()
     questions = [q for q, _, _ in qa_pairs]
@@ -87,18 +86,7 @@ def find_best_match_for_single(query, candidate, threshold=0.5):
     return candidate, score
 
 
-# def save_message_to_db(session_id: str, role: str, content: str):
-#     try:
-#         conn = mysql.connector.connect(**MYSQL_CONFIG)
-#         cursor = conn.cursor()
-#         cursor.execute(
-#             "INSERT INTO chat_history (session_id, role, content) VALUES (%s, %s, %s)",
-#             (session_id, role, content)
-#         )
-#         conn.commit()
-#         conn.close()
-#     except Exception as e:
-#         logger.error(f"❌ DB save error: {e}")
+
 def save_message_to_db(session_id: str, role: str, content: str, danhmuc: int = 0):
     """
     Lưu tin nhắn cùng danhmuc vào bảng chat_history.
@@ -140,39 +128,6 @@ def get_history(session_id: str):
     except Exception as e:
         logger.error(f"❌ DB history load error: {e}")
         return {"messages": []}
-
-# @app.post("/chat")
-# async def chat(payload: ChatPayload, request: Request):
-    # body = await request.body()
-    # logger.info(f"📦 Payload: {body.decode('utf-8')}")
-    # session_id = payload.session_id
-    # user_message = payload.messages[-1]['content']
-    # qa_pairs = get_cached_qa_pairs()
-    
-    # if not qa_pairs:
-    #     return {"response": "Không thể tải dữ liệu từ MySQL."}
-
-    # answer, score = find_best_match(user_message, qa_pairs)
-    # logger.info(f"🔍 TF-IDF score: {score:.2f} | {user_message}")
-
-    # save_message_to_db(session_id, "user", user_message)
-
-    # if score >= 0.5:
-    #     save_message_to_db(session_id, "assistant", answer)
-    #     return {"response": answer, "source": "knowledge_base", "similarity": round(score, 2)}
-
-    # try:
-    #     context = payload.messages[-3:] if len(payload.messages) > 3 else payload.messages
-    #     completion = client.chat.completions.create(
-    #         model="gpt-4o-mini",
-    #         messages=context
-    #     )
-    #     reply = completion.choices[0].message.content
-    #     save_message_to_db(session_id, "assistant", reply)
-    #     return {"response": reply, "source": "gpt", "similarity": round(score, 2)}
-    # except Exception as e:
-    #     logger.error(f"❌ GPT error: {e}")
-    #     return {"response": f"❌ Lỗi khi gọi GPT: {e}", "source": "error"}
 @app.post("/chat")
 async def chat(payload: ChatPayload, request: Request):
     body = await request.body()
@@ -190,7 +145,7 @@ async def chat(payload: ChatPayload, request: Request):
     # Lưu tin nhắn user
     #save_message_to_db(session_id, "user", user_message)
 
-    if score >= 0.5:
+    if score >= 0.7:
         # Khi match được trong knowledge base
         matched_index = None
         vectorizer, tfidf_matrix = get_vectorizer_and_matrix()
@@ -201,16 +156,36 @@ async def chat(payload: ChatPayload, request: Request):
         save_message_to_db(session_id, "assistant", answer, danhmuc=danhmuc)
         return {"response": answer, "source": "knowledge_base", "similarity": round(score, 2)}
     else:
-        # Khi GPT tạo câu trả lời
         try:
             context = payload.messages[-3:] if len(payload.messages) > 3 else payload.messages
             completion = client.chat.completions.create(model="gpt-4o-mini", messages=context)
 
             reply = completion.choices[0].message.content
-            save_message_to_db(session_id, "user", user_message, danhmuc=0)
-            save_message_to_db(session_id, "assistant", reply, danhmuc=0)
 
-            return {"response": reply, "source": "gpt", "similarity": round(score, 2)}
+            # 🔁 Check xem GPT reply có trùng với câu trả lời nào trong knowledge base không
+            vectorizer, tfidf_matrix = get_vectorizer_and_matrix()
+            reply_vector = vectorizer.transform([reply])
+            answer_texts = [q[1] for q in qa_pairs]
+            answer_matrix = vectorizer.transform(answer_texts)
+            sims = cosine_similarity(reply_vector, answer_matrix).flatten()
+            best_match_index = sims.argmax()
+            best_score = sims[best_match_index]
+
+            if best_score >= 0.5:
+                danhmuc = qa_pairs[best_match_index][2] if len(qa_pairs[best_match_index]) > 2 else 0
+            else:
+                danhmuc = 0
+
+            # 💾 Lưu lịch sử
+            log_conversation(session_id, user_message, reply, danhmuc=danhmuc)
+
+            return {
+                "response": reply,
+                "source": "gpt",
+                "similarity": round(score, 2),
+                "matched_answer_similarity": round(best_score, 2)
+            }
+
         except Exception as e:
             logger.error(f"❌ GPT error: {e}")
             return {"response": f"❌ Lỗi khi gọi GPT: {e}", "source": "error"}
@@ -223,7 +198,7 @@ def get_grouped_unknown_questions_embedding():
         cursor.execute("""
             SELECT id, content AS cauhoi 
             FROM chat_history 
-            WHERE danhmuc = 0 AND role = 'user' AND id NOT IN (SELECT chat_history_id FROM mapping_data)
+            WHERE danhmuc = 0 AND role = 'user' AND created_at >='2025-06-30' and id NOT IN (SELECT chat_history_id FROM mapping_data)
         """)
         rows = cursor.fetchall()
         conn.close()
@@ -252,25 +227,27 @@ def get_grouped_unknown_questions_embedding():
                 best_score = sim_score
                 matched_index = i
 
-        if best_score >= 0.5:
+        if best_score >= 0.8:
             groups[matched_index]["ids"].append(record["id"])
+            groups[matched_index]["questions"].append(record["cauhoi"])
             groups[matched_index]["count"] += 1
         else:
             groups.append({
                 "representative": record["cauhoi"],
                 "count": 1,
                 "ids": [record["id"]],
+                "questions": [record["cauhoi"]],
                 "embedding": embeddings[idx]
             })
 
-    # Loại bỏ embedding trước khi return
+    # Loại bỏ embedding trước khi trả về
     result = []
     for group in groups:
         result.append({
             "representative": group["representative"],
             "count": group["count"],
-            "ids": group["ids"]
+            "ids": group["ids"],
+            "questions": group["questions"]
         })
 
     return {"groups": result}
-

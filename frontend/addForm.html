@@ -11,7 +11,7 @@
   <div id="menuContainer"></div> <!-- Nơi menu sẽ được nhét vào -->
 
 <script>
-fetch("/menu.html")
+fetch("/vle/menu.html")
   .then(response => response.text())
   .then(data => {
     document.getElementById("menuContainer").innerHTML = data;
@@ -63,5 +63,5 @@ fetch("/menu.html")
 </table>
 <div class="d-flex justify-content-center mt-3" id="paginationControls"></div>
 </body>
-<script src="/main.js"></script>
+<script src="/vle/main.js"></script>
 </html>

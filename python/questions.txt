@@ -1,0 +1,200 @@
+Tôi bị quên mật khẩu, làm sao để khôi phục?
+Làm sao để đổi mật khẩu tài khoản học tập?
+Hệ thống có cho phép đăng nhập bằng Google không?
+Tại sao tôi không đăng nhập được vào hệ thống?
+Làm sao để biết tên đăng nhập của mình là gì?
+Sau bao lâu thì tài khoản bị khóa nếu không hoạt động?
+Tôi không nhận được email xác nhận đăng ký tài khoản.
+Khi đăng nhập xong thì bị lỗi trắng màn hình, phải làm sao?
+Có thể đăng nhập trên điện thoại không?
+Một tài khoản có thể dùng học nhiều khóa không?
+Tôi tìm mãi không thấy bài giảng môn Toán.
+Làm sao để tải tài liệu bài học về máy?
+Có thể xem video bài giảng trên điện thoại được không?
+Tôi muốn biết giáo trình của môn học này có ở đâu?
+Hệ thống có lưu lại tiến trình học không?
+Mỗi bài học có cần xem đủ 100% video không?
+Tôi có thể tua nhanh video bài giảng không?
+Video không load được, phải làm sao?
+Tôi không thấy nút bắt đầu bài học.
+Giảng viên có thể cập nhật tài liệu mới không?
+Làm sao để biết lịch kiểm tra?
+Tôi bị văng ra giữa lúc đang làm bài thi, có thể thi lại không?
+Có thể làm bài kiểm tra nhiều lần không?
+Thời gian làm bài thi là bao lâu?
+Bài kiểm tra có lưu tự động không?
+Làm xong bài thi thì nhấn nút nào để nộp?
+Tôi chưa thấy kết quả bài kiểm tra.
+Nếu mất mạng khi thi thì có bị tính điểm không?
+Có được sử dụng tài liệu khi làm bài kiểm tra không?
+Hệ thống có chống gian lận thi cử không?
+Làm sao để đặt câu hỏi cho giảng viên?
+Hệ thống có phần diễn đàn không?
+Tôi muốn phản hồi về bài học thì gửi ở đâu?
+Có thể xem câu hỏi của người khác đã hỏi không?
+Tôi có thể bình luận dưới bài giảng không?
+Giảng viên có trả lời câu hỏi trên hệ thống không?
+Làm sao để liên hệ trợ giảng?
+Tôi không thấy phần hỏi đáp.
+Có chức năng chat nhóm không?
+Làm sao tạo chủ đề mới trong diễn đàn?
+Lịch học của tôi xem ở đâu?
+Hệ thống có gửi nhắc lịch học không?
+Tôi có thể thêm lịch học vào Google Calendar không?
+Có thể xem lịch của tuần này không?
+Tôi bị trùng lịch học, phải làm sao?
+Lịch học có thay đổi thì hệ thống có báo không?
+Làm sao để xem lịch học đã qua?
+Tôi muốn hủy một buổi học thì làm sao?
+Có thể xuất lịch học ra Excel không?
+Tôi muốn biết lịch học theo môn cụ thể.
+Tôi xem điểm bài kiểm tra ở đâu?
+Điểm bài tập có được tính vào điểm cuối kỳ không?
+Tôi thấy điểm của tôi bị sai.
+Có thể phúc khảo điểm trên hệ thống không?
+Khi nào thì có điểm tổng kết môn?
+Làm sao để biết mình đã đạt yêu cầu môn học chưa?
+Tôi muốn xem bảng điểm đầy đủ.
+Điểm có được cập nhật theo thời gian thực không?
+Giảng viên đã chấm điểm nhưng tôi chưa thấy kết quả.
+Có thể tải bảng điểm xuống không?
+Hệ thống có cấp chứng chỉ khi hoàn thành không?
+Tôi đã học xong nhưng chưa nhận được chứng chỉ.
+Chứng chỉ có bản in không?
+Làm sao để xin cấp lại chứng chỉ?
+Chứng chỉ có giá trị bao lâu?
+Tôi muốn kiểm tra mã chứng chỉ.
+Chứng chỉ có song ngữ không?
+Tôi có thể chia sẻ chứng chỉ lên LinkedIn không?
+Có thể xem chứng chỉ mẫu trước không?
+Điều kiện để được cấp chứng chỉ là gì?
+Trang web bị lỗi không truy cập được.
+Tôi bị lỗi 404 khi bấm vào đường link.
+Video bị đứng hình sau vài giây.
+Tôi bị đăng xuất liên tục.
+Phần mềm chấm điểm không hoạt động.
+Không xem được bài giảng trên trình duyệt Firefox.
+Tôi bị lỗi khi tải tài liệu PDF.
+Lỗi 'Access Denied' là gì?
+Trình duyệt báo lỗi bảo mật khi truy cập.
+Tôi không nhận được email xác nhận.
+Làm sao tạo lớp học mới?
+Tôi muốn thêm học viên vào khóa học.
+Làm sao để cấp quyền cho giảng viên?
+Có thể xoá học viên khỏi lớp không?
+Tôi muốn gửi thông báo cho cả lớp.
+Có thể tạo mã QR cho lớp học không?
+Tôi muốn theo dõi tiến độ học của học viên.
+Hệ thống có báo cáo thống kê không?
+Có thể import học viên từ file Excel không?
+Tôi cần hướng dẫn quản lý hệ thống.
+Hệ thống eLearning là gì?
+Tôi cần những gì để bắt đầu học?
+Có phí sử dụng hệ thống không?
+Hệ thống có bản mobile không?
+Tôi có thể học bất cứ lúc nào không?
+Khóa học có thời hạn không?
+Tôi có thể học nhiều môn cùng lúc không?
+Làm sao để đánh giá khóa học?
+Có thể rút khỏi khóa học giữa chừng không?
+Tôi có thể xem lại nội dung sau khi học xong không?
+Tôi có thể đổi email tài khoản không?
+Làm sao để cấp lại tài khoản cho sinh viên mới?
+Có thể dùng một email cho nhiều tài khoản không?
+Tôi có thể đăng nhập bằng số điện thoại không?
+Có bị giới hạn số thiết bị đăng nhập không?
+Làm sao để đăng xuất khỏi tất cả thiết bị?
+Hệ thống có xác thực hai bước không?
+Tôi có thể tạo tài khoản mới bằng mã sinh viên không?
+Có thể chuyển tài khoản từ sinh viên sang giảng viên không?
+Tôi có thể xem nhật ký đăng nhập của mình không?
+Làm sao để sao chép nội dung khóa học cũ sang khóa mới?
+Tôi có thể khóa một khóa học tạm thời không?
+Làm sao ẩn một khóa học khỏi học viên?
+Có thể ghép hai lớp học vào một không?
+Tôi có thể đổi giảng viên cho khóa học không?
+Khóa học có thể có nhiều trợ giảng không?
+Làm sao để đặt thời hạn truy cập cho khóa học?
+Có thể đặt điều kiện hoàn thành bài học không?
+Tôi có thể xuất danh sách học viên của lớp không?
+Có thể cài đặt số lần tối đa học viên được thi lại không?
+Tôi có thể upload video dài bao nhiêu phút?
+Hệ thống hỗ trợ định dạng video nào?
+Có thể chèn quiz vào giữa video không?
+Tôi muốn nhúng video từ YouTube thì làm sao?
+Hệ thống có tự tạo phụ đề không?
+Làm sao để thêm audio giảng bài vào slide?
+Tôi có thể đổi thumbnail của video không?
+Có thể upload bài giảng dạng PowerPoint không?
+Tôi có thể thêm hình ảnh minh họa vào bài học không?
+Hệ thống có hỗ trợ SCORM không?
+Làm sao tạo khảo sát cuối khóa?
+Tôi có thể yêu cầu học viên đánh giá bài giảng không?
+Hệ thống có mẫu khảo sát sẵn không?
+Tôi có thể xem thống kê phản hồi của học viên không?
+Làm sao giới hạn số lần làm khảo sát?
+Tôi có thể xem ai chưa làm khảo sát không?
+Có thể tạo khảo sát ẩn danh không?
+Tôi có thể cho điểm khảo sát không?
+Khảo sát có thời hạn không?
+Có thể gửi thông báo tự động nhắc làm khảo sát không?
+Làm sao để gửi yêu cầu hỗ trợ kỹ thuật?
+Hệ thống có hotline hỗ trợ không?
+Tôi có thể chat trực tiếp với kỹ thuật viên không?
+Thời gian hỗ trợ của hệ thống là khi nào?
+Tôi gửi yêu cầu nhưng chưa nhận phản hồi.
+Có tài liệu hướng dẫn sử dụng hệ thống không?
+Hệ thống có hỗ trợ cho người khiếm thị không?
+Tôi muốn gửi góp ý cải tiến hệ thống.
+Có thể yêu cầu demo chức năng mới không?
+Tôi muốn biết ai phụ trách quản trị hệ thống.
+Có app riêng cho hệ thống eLearning không?
+Tôi có thể học offline bằng app không?
+App có thông báo nhắc lịch học không?
+Tôi bị lỗi khi mở bài giảng trong app.
+Làm sao để cập nhật phiên bản mới nhất của app?
+Có thể dùng app trên máy tính bảng không?
+Tôi muốn gửi phản hồi về lỗi trong app.
+App có tính năng tải tài liệu không?
+Tôi có thể học trên nhiều thiết bị cùng lúc không?
+Có thể quét mã QR để vào lớp trên app không?
+Tôi muốn xem báo cáo tiến độ học tập.
+Hệ thống có bảng điều khiển quản trị không?
+Tôi có thể xuất báo cáo theo tuần không?
+Có thể lọc thống kê theo từng lớp không?
+Tôi muốn xem học viên nào chưa hoàn thành khóa.
+Có thể xuất dữ liệu thành Excel hoặc PDF không?
+Báo cáo có cập nhật theo thời gian thực không?
+Tôi có thể tạo biểu đồ thống kê điểm không?
+Hệ thống có API để lấy dữ liệu không?
+Tôi muốn biết tổng số học viên đang hoạt động.
+Thông tin học viên có được bảo mật không?
+Hệ thống có tuân thủ GDPR không?
+Có thể giới hạn ai được xem bài giảng không?
+Tôi có thể ẩn tên khi hỏi trong diễn đàn không?
+Có chính sách bảo vệ dữ liệu cá nhân không?
+Hệ thống lưu dữ liệu ở đâu?
+Ai có quyền truy cập thông tin điểm số?
+Tôi có thể xóa tài khoản của mình không?
+Hệ thống có log lại hoạt động người dùng không?
+Tôi muốn biết các quyền của mình trong hệ thống.
+Có thể tích hợp hệ thống với Zoom không?
+Hệ thống có tính năng chấm điểm tự động không?
+Tôi muốn biết có bao nhiêu học viên đã hoàn thành bài giảng.
+Có thể đặt thời gian giới hạn cho từng slide không?
+Làm sao để cấp mã kích hoạt cho học viên?
+Hệ thống có hỗ trợ lưu nháp bài làm không?
+Tôi có thể thêm nhiều đáp án đúng trong quiz không?
+Hệ thống có lưu lịch sử học tập chi tiết không?
+Có thể thiết lập giới hạn thời gian truy cập tài liệu không?
+Tôi muốn biết cách thiết kế khóa học hiệu quả.
+Có thể chia lớp tự động theo nhóm nhỏ không?
+Làm sao để gửi email nhắc học viên hoàn thành bài học?
+Tôi có thể xem thống kê lượt xem video không?
+Làm sao để đặt điều kiện hoàn thành theo điểm số?
+Tôi muốn khóa học có cấp độ theo chương, làm sao làm được?
+Có thể nhập liệu câu hỏi trắc nghiệm hàng loạt không?
+Tôi có thể theo dõi lịch sử chỉnh sửa nội dung không?
+Có chức năng chống copy tài liệu không?
+Làm sao để biết ai là người tải lên một tài liệu?
+Tôi muốn biết có bao nhiêu học viên đang online.

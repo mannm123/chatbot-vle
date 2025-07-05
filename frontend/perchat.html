@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Bản điều khiển</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/nk/style.css">
+  <script src="/nk/main.js"></script>
+  <script src="./bootstrap.bundle.min.js"></script>
+</head>
+<body>
+  <div id="menuContainer"></div> <!-- Nơi menu sẽ được nhét vào -->
+
+<script>
+fetch("/nk/menu.html")
+  .then(response => response.text())
+  .then(data => {
+    document.getElementById("menuContainer").innerHTML = data;
+  });
+</script>
+  <div class="container mt-5">
+    <h2 class="mb-4 text-center">Thống kê câu hỏi theo danh mục</h2>
+
+    <div class="card shadow">
+      <div class="card-body">
+        <table class="table table-bordered table-hover" id="perchatTable">
+          <thead class="table-primary">
+            <tr>
+              <th>Danh mục</th>
+              <th>Số câu hỏi của User</th>
+              <th>Số phản hồi của Assistant</th>
+              <th>Hiệu suất nhận biết</th>
+            </tr>
+          </thead>
+          <tbody id="perchatBody">
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+ <script>
+  async function loadPerChatData() {
+      try {
+        const response = await fetch('/vle/api/perchat');
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          const tableBody = document.getElementById('perchatBody');
+          tableBody.innerHTML = ''; // clear cũ
+
+          result.data.forEach(row => {
+            const tr = document.createElement('tr');
+            const percentage = row.user_count > 0
+              ? ((row.assistant_count / row.user_count) * 100).toFixed(1) + '%'
+              : '0%';
+            tr.innerHTML = `
+              <td>${row.danhmuc}</td>
+              <td>${row.user_count}</td>
+              <td>${row.assistant_count}</td>
+              <td>${percentage}</td>
+            `;
+            tableBody.appendChild(tr);
+          });
+        } else {
+          alert('Lỗi khi lấy dữ liệu!');
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        alert('Không thể kết nối đến server.');
+      }
+    }
+
+    // Gọi hàm khi trang load
+    window.onload = loadPerChatData;
+</script>
+</body>
+</html>
