@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
@@ -17,10 +18,10 @@ app.use(express.json());
 // };
 
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'chatbot_vle',
-  password: 'chatbot_vle',
-  database: 'chatbot_vle',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -41,41 +42,14 @@ db.query('SELECT 1', (err) => {
 
 function basicAuth(req, res, next) {
   const credentials = auth(req);
-  const USERNAME = 'admin';
-  const PASSWORD = 'Vle@123';
+  const USERNAME = process.env.AUTH_USERNAME;
+  const PASSWORD = process.env.AUTH_PASSWORD;
   if (!credentials || credentials.name !== USERNAME || credentials.pass !== PASSWORD) {
     res.set('WWW-Authenticate', 'Basic realm="VLE Admin"');
     return res.status(401).send('Access denied');
   }
   next();
 }
-function handleDisconnect() {
-  const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'chatbot_vle',
-    password: 'chatbot_vle',
-    database: 'chatbot_vle'
-  });
-
-  db.connect((err) => {
-    if (err) {
-      console.error('❌ Reconnect thất bại, thử lại sau 2s...', err.message);
-      setTimeout(handleDisconnect, 2000); // retry sau 2 giây
-    } else {
-      console.log('✅ Reconnected to MySQL');
-    }
-  });
-
-  db.on('error', function(err) {
-    console.error('💥 MySQL error:', err);
-    if (err.fatal) {
-      handleDisconnect();
-    }
-  });
-
-  global.db = db; // nếu bạn cần chia sẻ lại kết nối
-}
-
 // Bảo vệ addForm.html bằng Basic Auth
 app.get('/dashboard', basicAuth,(req, res) => {
   res.sendFile(path.join(__dirname, '..','frontend','dashboard.html'));
