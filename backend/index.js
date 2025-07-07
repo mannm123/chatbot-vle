@@ -362,7 +362,50 @@ app.get("/api/perchat", (req, res) => {
     });
   });
 });
+app.post('/api/answer-group', basicAuth, async (req, res) => {
+  const { ids, message, danhmuc, cauhoi } = req.body;
+  console.log
+  if (!ids || !Array.isArray(ids) || ids.length === 0 || !message) {
+    return res.status(400).json({ success: false, message: "Thiếu dữ liệu" });
+  }
 
+  // 1. Lấy session_id của tất cả câu hỏi
+  const placeholders = ids.map(() => '?').join(',');
+  const getSessionsSQL = `
+    SELECT id, session_id 
+    FROM chat_history 
+    WHERE id IN (${placeholders})
+  `;
+
+  db.query(getSessionsSQL, ids, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: "Lỗi khi truy vấn session_id" });
+    }
+
+    // 2. Nhóm theo session_id để tránh duplicate
+    const uniqueSessions = [...new Set(results.map(row => row.session_id))];
+
+    // 3. Tạo các dòng chèn vào chat_history
+    const values = results.map(row => {
+      const customMessage = `Chào em, đây là câu trả lời cho câu hỏi "${cauhoi}": ${message}`;
+      return [row.session_id, 'assistant', danhmuc || 0, customMessage];
+    });
+    const insertSQL = `
+      INSERT INTO chat_history (session_id, role, danhmuc, content)
+      VALUES ?
+    `;
+
+    db.query(insertSQL, [values], (insertErr, insertResult) => {
+      if (insertErr) {
+        console.error(insertErr);
+        return res.status(500).json({ success: false, message: "Lỗi khi chèn câu trả lời" });
+      }
+
+      res.json({ success: true, inserted: insertResult.affectedRows });
+    });
+  });
+});
 
 app.listen(3000, () => {
   console.log('✅ HTTP Server is running on 0.0.0.0:3000');

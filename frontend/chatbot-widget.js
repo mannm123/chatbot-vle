@@ -1,6 +1,26 @@
 (function () {
   const API_URL = "https://chatbot.hcmue.edu.vn/vle/chat";
   const HISTORY_URL = "https://chatbot.hcmue.edu.vn/vle/history";
+  
+  setInterval(async () => {
+  
+  try {
+    const res = await fetch(`${HISTORY_URL}/${sessionId}`);
+    const data = await res.json();
+
+    const newMessages = data.messages.filter(
+      m => m.role === "assistant" &&
+           !messageHistory.some(hist => hist.role === "assistant" && hist.content === m.content)
+    );
+
+    newMessages.forEach(m => {
+      appendMessage(m.content, "bot");
+      messageHistory.push({ role: "assistant", content: m.content });
+    });
+  } catch (err) {
+    console.warn("Polling lỗi:", err);
+  }
+}, 5000); // mỗi 5 giây
 
   let sessionId = localStorage.getItem("chat_session_id");
   if (!sessionId) {
@@ -78,13 +98,22 @@
   });
 
   function appendMessage(content, sender = "user") {
-    const div = document.createElement("div");
-    div.className = `chat-msg ${sender === "user" ? "user-msg" : "bot-msg"}`;
+  const div = document.createElement("div");
+  div.className = `chat-msg ${sender === "user" ? "user-msg" : "bot-msg"}`;
+
+  if (sender === "bot" && content.startsWith("Chào em, đây là câu trả lời cho câu hỏi")) {
+    div.style.backgroundColor = "#fff3cd"; // màu vàng nhạt
+    div.style.border = "1px solid #ffeeba";
+    div.style.fontWeight = "bold";
+    div.innerHTML = `✨ <i>${content}</i>`;
+  } else {
     div.textContent = content;
-    messagesDiv.appendChild(div);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    return div;
   }
+
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  return div;
+}
 
   button.addEventListener("click", async () => {
     const msg = input.value.trim();

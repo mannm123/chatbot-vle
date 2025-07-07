@@ -239,6 +239,16 @@ document.getElementById("saveButton").addEventListener("click", async () => {
   const result = await resp.json();
 
   if (result.success) {
+    await fetch("/vle/api/answer-group", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ids: currentGroup,
+      message: cautraloi,
+      danhmuc: danhmuc,
+      cauhoi: cauhoi
+    })
+  });
     alert("✅ Đã thêm thành công!");
     loadGroups();
     bootstrap.Modal.getInstance(document.getElementById("addQuestionModal")).hide();

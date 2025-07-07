@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Request, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List
 import mysql.connector
@@ -12,13 +13,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 from functools import lru_cache
 from sentence_transformers import SentenceTransformer
 import numpy as np
+from fastapi.responses import JSONResponse
 
 embedding_model = SentenceTransformer('all-mpnet-base-v2')
 app = FastAPI()
 # Load .env
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 # MySQL config
 MYSQL_CONFIG = {
     "host": os.getenv("MYSQL_HOST"),
@@ -32,10 +33,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # FastAPI
-app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://vle.hcmue.edu.vn","https://chatbotadmin.hcmue.edu.vn"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,7 +59,6 @@ def get_cached_qa_pairs():
     except Exception as e:
         logger.error(f"❌ DB load error: {e}")
         return []
-
 def get_vectorizer_and_matrix():
     qa_pairs = get_cached_qa_pairs()
     questions = [q for q, _, _ in qa_pairs]
@@ -156,40 +155,17 @@ async def chat(payload: ChatPayload, request: Request):
         save_message_to_db(session_id, "assistant", answer, danhmuc=danhmuc)
         return {"response": answer, "source": "knowledge_base", "similarity": round(score, 2)}
     else:
-        try:
-            context = payload.messages[-3:] if len(payload.messages) > 3 else payload.messages
-            completion = client.chat.completions.create(model="gpt-4o-mini", messages=context)
+        fallback_reply = (
+            "Câu hỏi này chưa thể trả lời, bạn gửi mail về hotrovle@hcmue.edu.vn, hoặc chờ một thời gian chúng tôi sẽ cập nhật câu trả lời (nếu đang sử dụng tab ẩn danh, bạn vui lòng mở lại tab thường để chúng tôi có thể tìm thấy bạn khi câu hỏi của bạn được đội ngũ quản trị viên giải đáp)."
+        )
+        save_message_to_db(session_id, "user", user_message, danhmuc=0)
+        save_message_to_db(session_id, "assistant", fallback_reply, danhmuc=0)
 
-            reply = completion.choices[0].message.content
-
-            # 🔁 Check xem GPT reply có trùng với câu trả lời nào trong knowledge base không
-            vectorizer, tfidf_matrix = get_vectorizer_and_matrix()
-            reply_vector = vectorizer.transform([reply])
-            answer_texts = [q[1] for q in qa_pairs]
-            answer_matrix = vectorizer.transform(answer_texts)
-            sims = cosine_similarity(reply_vector, answer_matrix).flatten()
-            best_match_index = sims.argmax()
-            best_score = sims[best_match_index]
-
-            if best_score >= 0.5:
-                danhmuc = qa_pairs[best_match_index][2] if len(qa_pairs[best_match_index]) > 2 else 0
-            else:
-                danhmuc = 0
-
-            # 💾 Lưu lịch sử
-            log_conversation(session_id, user_message, reply, danhmuc=danhmuc)
-
-            return {
-                "response": reply,
-                "source": "gpt",
-                "similarity": round(score, 2),
-                "matched_answer_similarity": round(best_score, 2)
-            }
-
-        except Exception as e:
-            logger.error(f"❌ GPT error: {e}")
-            return {"response": f"❌ Lỗi khi gọi GPT: {e}", "source": "error"}
-
+        return {
+            "response": fallback_reply,
+            "source": "fallback",
+            "similarity": round(score, 2)
+        }
 @app.get("/chat/grouped-unknown")
 def get_grouped_unknown_questions_embedding():
     try:
@@ -227,7 +203,7 @@ def get_grouped_unknown_questions_embedding():
                 best_score = sim_score
                 matched_index = i
 
-        if best_score >= 0.8:
+        if best_score >= 0.9:
             groups[matched_index]["ids"].append(record["id"])
             groups[matched_index]["questions"].append(record["cauhoi"])
             groups[matched_index]["count"] += 1
