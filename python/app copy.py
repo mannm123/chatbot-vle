@@ -14,9 +14,6 @@ from functools import lru_cache
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from fastapi.responses import JSONResponse
-from deep_translator import GoogleTranslator
-from langdetect import detect
-
 
 embedding_model = SentenceTransformer('all-mpnet-base-v2')
 app = FastAPI()
@@ -34,23 +31,7 @@ MYSQL_CONFIG = {
 # Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-from langdetect import detect
 
-def detect_language(text: str) -> str:
-    try:
-        lang = detect(text)
-        return lang if lang in ("vi", "en") else "vi"
-    except Exception as e:
-        logger.warning(f"⚠️ Language detection failed: {e}")
-        return "vi"
-def translate_text(text: str, src: str, dest: str) -> str:
-    try:
-        if src == dest:
-            return text
-        return GoogleTranslator(source=src, target=dest).translate(text)
-    except Exception as e:
-        logger.warning(f"⚠️ Translation failed: {e}")
-        return text
 # FastAPI
 app.add_middleware(
     CORSMiddleware,
@@ -152,16 +133,13 @@ async def chat(payload: ChatPayload, request: Request):
     logger.info(f"📦 Payload: {body.decode('utf-8')}")
     session_id = payload.session_id
     user_message = payload.messages[-1]['content']
-    user_lang = detect_language(user_message)
-    logger.info(f"🌐 Detected language: {user_lang}")
-    translated_input = translate_text(user_message, src=user_lang, dest="vi") if user_lang != "vi" else user_message
-    logger.info(f"🔁 Translated input: {translated_input}")
     qa_pairs = get_cached_qa_pairs()
     
     if not qa_pairs:
         return {"response": "Không thể tải dữ liệu từ MySQL."}
-    answer, score, matched_index = find_best_match(translated_input, qa_pairs)
-    logger.info(f"🔍 TF-IDF score: {score:.2f} | query = {translated_input}")
+    answer, score, matched_index = find_best_match(user_message, qa_pairs)
+
+    logger.info(f"🔍 TF-IDF score: {score:.2f} | {user_message}")
 
     # Lưu tin nhắn user
     #save_message_to_db(session_id, "user", user_message)
@@ -170,23 +148,21 @@ async def chat(payload: ChatPayload, request: Request):
         # Khi match được trong knowledge base
         matched_index = None
         vectorizer, tfidf_matrix = get_vectorizer_and_matrix()
-        sims = cosine_similarity(vectorizer.transform([translated_input]), tfidf_matrix).flatten()
+        sims = cosine_similarity(vectorizer.transform([user_message]), tfidf_matrix).flatten()
         matched_index = sims.argmax()
         danhmuc = qa_pairs[matched_index][2] if matched_index is not None and len(qa_pairs[matched_index]) > 2 else 0
-        final_reply = translate_text(answer, src="vi", dest=user_lang) if user_lang != "vi" else answer
-        save_message_to_db(session_id, "user", translated_input, danhmuc=danhmuc)
-        save_message_to_db(session_id, "assistant", final_reply, danhmuc=danhmuc)
-        return {"response": final_reply, "source": "knowledge_base", "similarity": round(score, 2)}
+        save_message_to_db(session_id, "user", user_message, danhmuc=danhmuc)
+        save_message_to_db(session_id, "assistant", answer, danhmuc=danhmuc)
+        return {"response": answer, "source": "knowledge_base", "similarity": round(score, 2)}
     else:
-        fallback_reply_vi = (
+        fallback_reply = (
             "Câu hỏi này chưa thể trả lời, bạn gửi mail về hotrovle@hcmue.edu.vn, hoặc chờ một thời gian chúng tôi sẽ cập nhật câu trả lời (nếu đang sử dụng tab ẩn danh, bạn vui lòng mở lại tab thường để chúng tôi có thể tìm thấy bạn khi câu hỏi của bạn được đội ngũ quản trị viên giải đáp)."
         )
-        final_reply = translate_text(fallback_reply_vi, src="vi", dest=user_lang) if user_lang != "vi" else fallback_reply_vi
-        save_message_to_db(session_id, "user", translated_input, danhmuc=0)
-        save_message_to_db(session_id, "assistant", final_reply, danhmuc=0)
+        save_message_to_db(session_id, "user", user_message, danhmuc=0)
+        save_message_to_db(session_id, "assistant", fallback_reply, danhmuc=0)
 
         return {
-            "response": final_reply,
+            "response": fallback_reply,
             "source": "fallback",
             "similarity": round(score, 2)
         }

@@ -20,7 +20,7 @@
   } catch (err) {
     console.warn("Polling lỗi:", err);
   }
-}, 5000); // mỗi 5 giây
+}, 60000); // mỗi 20 giây
 
   let sessionId = localStorage.getItem("chat_session_id");
   if (!sessionId) {
@@ -54,15 +54,64 @@
     <div id="chatbot-widget-header">🤖 Trợ lý ảo VLE</div>
     <div id="chatbot-widget-messages"></div>
     <div id="chatbot-widget-input">
-      <input type="text" placeholder="Nhập câu hỏi..." />
+    <button id="mic-btn" title="Nói vào micro 🎤">🎤</button>
+      <input type="text" placeholder="Nhập câu hỏi..." /> 
       <button>Gửi</button>
     </div>
   `;
   document.body.appendChild(widget);
 
   const input = widget.querySelector("input");
-  const button = widget.querySelector("button");
+  //const button = widget.querySelector("button");
+  const sendButton = widget.querySelector("#chatbot-widget-input button:last-child");
   const messagesDiv = widget.querySelector("#chatbot-widget-messages");
+  const micBtn = widget.querySelector("#mic-btn");
+let recognition;
+let stopListeningTimeout;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'vi-VN';
+  recognition.continuous = false; // chỉ lắng nghe một đoạn thôi
+  recognition.interimResults = false;
+
+  micBtn.addEventListener("click", () => {
+    try {
+      recognition.start();
+      micBtn.textContent = "🎙️ Đang nghe...";
+      
+      // Tự động dừng sau 10 giây
+      stopListeningTimeout = setTimeout(() => {
+        recognition.stop();
+        micBtn.textContent = "🎤";
+      }, 10000); // 10 giây
+    } catch (err) {
+      console.warn("🎤 Không thể khởi động ghi âm:", err);
+      micBtn.textContent = "🎤";
+    }
+  });
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    input.value = transcript;
+  };
+
+  recognition.onerror = (event) => {
+    console.warn("❌ Lỗi ghi âm:", event.error);
+    micBtn.textContent = "🎤";
+    clearTimeout(stopListeningTimeout);
+  };
+
+  recognition.onend = () => {
+    micBtn.textContent = "🎤";
+    clearTimeout(stopListeningTimeout);
+  };
+} else {
+  micBtn.disabled = true;
+  micBtn.title = "Trình duyệt không hỗ trợ voice input";
+}
+
 
   let messageHistory = [
     { role: "system", content: "Bạn là một trợ lý AI thân thiện, nhớ bối cảnh và tên người dùng nếu họ cung cấp." }
@@ -93,7 +142,7 @@
   input.addEventListener("keydown", function (e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      button.click();
+      sendButton.click();
     }
   });
 
@@ -115,7 +164,7 @@
   return div;
 }
 
-  button.addEventListener("click", async () => {
+  sendButton.addEventListener("click", async () => {
     const msg = input.value.trim();
     if (!msg) return;
 

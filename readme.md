@@ -1,1 +1,1 @@
-npm run dev:backend
+pm2 start npm --name admin_vle -- run dev:backend
