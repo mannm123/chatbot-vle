@@ -30,7 +30,8 @@ MYSQL_CONFIG = {
     "password": os.getenv("MYSQL_PASSWORD"),
     "database": os.getenv("MYSQL_DB"),
 }
-
+class TranslatePayload(BaseModel):
+    text: str
 # Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -105,7 +106,7 @@ def find_best_match_for_single(query, candidate, threshold=0.5):
 
 
 
-def save_message_to_db(session_id: str, role: str, content: str, danhmuc: int = 0):
+def save_message_to_db(session_id: str, role: str, content: str, danhmuc: int = 0,lang: str = "vi"):
     """
     Lưu tin nhắn cùng danhmuc vào bảng chat_history.
     danhmuc = 0 nếu câu trả lời ngoài knowledge base (từ GPT).
@@ -115,10 +116,10 @@ def save_message_to_db(session_id: str, role: str, content: str, danhmuc: int = 
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO chat_history (session_id, role, content, danhmuc) 
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO chat_history (session_id, role, content, danhmuc,lang) 
+            VALUES (%s, %s, %s, %s,%s)
             """,
-            (session_id, role, content, danhmuc),
+            (session_id, role, content, danhmuc,lang),
         )
         conn.commit()
         conn.close()
@@ -153,9 +154,7 @@ async def chat(payload: ChatPayload, request: Request):
     session_id = payload.session_id
     user_message = payload.messages[-1]['content']
     user_lang = detect_language(user_message)
-    logger.info(f"🌐 Detected language: {user_lang}")
     translated_input = translate_text(user_message, src=user_lang, dest="vi") if user_lang != "vi" else user_message
-    logger.info(f"🔁 Translated input: {translated_input}")
     qa_pairs = get_cached_qa_pairs()
     
     if not qa_pairs:
@@ -174,16 +173,17 @@ async def chat(payload: ChatPayload, request: Request):
         matched_index = sims.argmax()
         danhmuc = qa_pairs[matched_index][2] if matched_index is not None and len(qa_pairs[matched_index]) > 2 else 0
         final_reply = translate_text(answer, src="vi", dest=user_lang) if user_lang != "vi" else answer
-        save_message_to_db(session_id, "user", translated_input, danhmuc=danhmuc)
-        save_message_to_db(session_id, "assistant", final_reply, danhmuc=danhmuc)
+        save_message_to_db(session_id, "user", user_message, danhmuc=danhmuc,lang=user_lang)
+        save_message_to_db(session_id, "assistant", final_reply, danhmuc=danhmuc,lang=user_lang)
         return {"response": final_reply, "source": "knowledge_base", "similarity": round(score, 2)}
     else:
         fallback_reply_vi = (
             "Câu hỏi này chưa thể trả lời, bạn gửi mail về hotrovle@hcmue.edu.vn, hoặc chờ một thời gian chúng tôi sẽ cập nhật câu trả lời (nếu đang sử dụng tab ẩn danh, bạn vui lòng mở lại tab thường để chúng tôi có thể tìm thấy bạn khi câu hỏi của bạn được đội ngũ quản trị viên giải đáp)."
         )
         final_reply = translate_text(fallback_reply_vi, src="vi", dest=user_lang) if user_lang != "vi" else fallback_reply_vi
-        save_message_to_db(session_id, "user", translated_input, danhmuc=0)
-        save_message_to_db(session_id, "assistant", final_reply, danhmuc=0)
+        logger.info(user_message)
+        save_message_to_db(session_id, "user", user_message, danhmuc=0,lang=user_lang)
+        save_message_to_db(session_id, "assistant", final_reply, danhmuc=0,lang=user_lang)
 
         return {
             "response": final_reply,
@@ -196,7 +196,7 @@ def get_grouped_unknown_questions_embedding():
         conn = mysql.connector.connect(**MYSQL_CONFIG)
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT id, content AS cauhoi 
+            SELECT id, content AS cauhoi ,lang
             FROM chat_history 
             WHERE danhmuc = 0 AND role = 'user' AND created_at >='2025-06-30' and id NOT IN (SELECT chat_history_id FROM mapping_data)
         """)
@@ -218,6 +218,8 @@ def get_grouped_unknown_questions_embedding():
         matched_index = None
         best_score = 0.0
         for i, group in enumerate(groups):
+            if record.get("lang") != group.get("lang"):
+                continue
             sim_score = cosine_similarity(
                 embeddings[idx].reshape(1, -1),
                 group["embedding"].reshape(1, -1)
@@ -227,7 +229,7 @@ def get_grouped_unknown_questions_embedding():
                 best_score = sim_score
                 matched_index = i
 
-        if best_score >= 0.9:
+        if best_score >= 0.8:
             groups[matched_index]["ids"].append(record["id"])
             groups[matched_index]["questions"].append(record["cauhoi"])
             groups[matched_index]["count"] += 1
@@ -237,17 +239,38 @@ def get_grouped_unknown_questions_embedding():
                 "count": 1,
                 "ids": [record["id"]],
                 "questions": [record["cauhoi"]],
-                "embedding": embeddings[idx]
+                "embedding": embeddings[idx],
+                "lang": record.get("lang", "vi")
             })
 
     # Loại bỏ embedding trước khi trả về
     result = []
     for group in groups:
+        lang = group.get("lang", "vi")
+        if lang == "en":
+            rep_translated = translate_text(group["representative"], src="en", dest="vi")
+        else:
+            rep_translated = group["representative"]
         result.append({
-            "representative": group["representative"],
+            "representative": rep_translated,
             "count": group["count"],
+            "lang": lang,
             "ids": group["ids"],
             "questions": group["questions"]
         })
 
     return {"groups": result}
+@app.post("/api/translate")
+def translate(payload: TranslatePayload):
+    text = payload.text
+    #detected = detect_language(text)
+    target = "en" 
+
+    translated = translate_text(text, src="vi", dest=target)
+
+    return {
+        "original": text,
+        "detected_language": "vi",
+        "translated_language": target,
+        "translation": translated
+    }

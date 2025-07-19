@@ -259,7 +259,7 @@ app.get("/api/getchatassistant", (req, res) => {
   });
 });
 app.post("/api/add_question_from_group", (req, res) => {
-  const { danhmuc, cauhoi, cautraloi, ids } = req.body;
+  const { danhmuc, cauhoi, cautraloi, ids ,lang} = req.body;
 
   if (!danhmuc || !cauhoi || !cautraloi || !ids || ids.length === 0) {
     return res.status(400).json({ success: false, message: "Thiếu thông tin" });
@@ -362,37 +362,69 @@ app.get("/api/perchat", (req, res) => {
     });
   });
 });
+const axios = require("axios");
+
 app.post('/api/answer-group', basicAuth, async (req, res) => {
   const { ids, message, danhmuc, cauhoi } = req.body;
-  console.log
+
   if (!ids || !Array.isArray(ids) || ids.length === 0 || !message) {
     return res.status(400).json({ success: false, message: "Thiếu dữ liệu" });
   }
-
-  // 1. Lấy session_id của tất cả câu hỏi
   const placeholders = ids.map(() => '?').join(',');
   const getSessionsSQL = `
-    SELECT id, session_id 
-    FROM chat_history 
+    SELECT id, session_id, lang
+    FROM chat_history
     WHERE id IN (${placeholders})
   `;
 
-  db.query(getSessionsSQL, ids, (err, results) => {
+  db.query(getSessionsSQL, ids, async (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ success: false, message: "Lỗi khi truy vấn session_id" });
     }
 
-    // 2. Nhóm theo session_id để tránh duplicate
-    const uniqueSessions = [...new Set(results.map(row => row.session_id))];
+    const agent = new https.Agent({ rejectUnauthorized: false });
 
-    // 3. Tạo các dòng chèn vào chat_history
-    const values = results.map(row => {
-      const customMessage = `Chào em, đây là câu trả lời cho câu hỏi "${cauhoi}": ${message}`;
-      return [row.session_id, 'assistant', danhmuc || 0, customMessage];
-    });
+    // ✅ Hàm dịch có khai báo payload
+    async function translateText(text, targetLang = "en") {
+      try {
+        const payload = {
+          text: text,
+          //target_lang: targetLang
+        };
+
+        const response = await axios.post(
+          "https://chatbot.hcmue.edu.vn/vle/api/translate",
+          payload,
+          { httpsAgent: agent }
+        );
+        console.log(response);
+        return response.data?.translation || text;
+      } catch (err) {
+        console.warn("⚠️ Lỗi dịch:", err.message);
+        return text;
+      }
+    }
+
+    // ✅ Mapping đồng thời
+    const values = await Promise.all(results.map(async row => {
+      let translatedQuestion = cauhoi;
+      let translatedAnswer = message;
+
+      if (row.lang === "en") {
+        translatedQuestion = await translateText(cauhoi, "en");
+        translatedAnswer = await translateText(message, "en");
+      }
+      
+      const customMessage = row.lang === "en"
+        ? `Hi, here is the answer to the question "${translatedQuestion}": ${translatedAnswer}`
+        : `Chào em, đây là câu trả lời cho câu hỏi "${cauhoi}": ${message}`;
+
+      return [row.session_id, 'assistant', danhmuc || 0, customMessage, row.lang];
+    }));
+
     const insertSQL = `
-      INSERT INTO chat_history (session_id, role, danhmuc, content)
+      INSERT INTO chat_history (session_id, role, danhmuc, content, lang)
       VALUES ?
     `;
 

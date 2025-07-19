@@ -150,7 +150,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const div = document.createElement("div");
   div.className = `chat-msg ${sender === "user" ? "user-msg" : "bot-msg"}`;
 
-  if (sender === "bot" && (content.startsWith("Chào em, đây là câu trả lời cho câu hỏi")||content.startsWith("Hi, here is the answer to the question"))) {
+  if (sender === "bot" && content.startsWith("Chào em, đây là câu trả lời cho câu hỏi")) {
     div.style.backgroundColor = "#fff3cd"; // màu vàng nhạt
     div.style.border = "1px solid #ffeeba";
     div.style.fontWeight = "bold";

@@ -11,14 +11,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
+    "google-translate-api-x": "^10.7.2",
     "mysql2": "^3.14.1"
   },
   "devDependencies": {
-    "live-server": "^1.2.2",
+    "live-server": "^1.2.0",
     "nodemon": "^3.1.10"
   }
 }
